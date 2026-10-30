@@ -35,7 +35,8 @@ export function AuthRedirect({ className }: AuthRedirectProps) {
       `${basePaths.auth}/${viewPaths.auth.signIn}`
     )
 
-    window.location.replace(action.to)
+    // getSafeRedirectTo in @better-auth-ui/core 1.7.30 can return protocol-relative paths after URL normalization.
+    window.location.replace(action.to.startsWith("//") ? "/" : action.to)
   }, [basePaths.auth, isPending, session, viewPaths.auth.signIn])
 
   return <Spinner className={cn("mx-auto my-auto", className)} />

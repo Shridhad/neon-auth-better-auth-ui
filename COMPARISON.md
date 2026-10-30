@@ -8,7 +8,7 @@ goal is a list of what each example needs to change to move to `@neon/auth` and 
 
 | | `neondatabase/examples` today | This repo |
 |---|---|---|
-| SDK | `@neondatabase/auth` 0.4.2-beta – 0.6.0-beta (or `@neondatabase/neon-js` 0.7.0-beta) | `@neon/auth` 0.8.0 |
+| SDK | `@neondatabase/auth` 0.4.2-beta – 0.6.0-beta (or `@neondatabase/neon-js` 0.7.0-beta) | `@neon/auth` 0.8.1 |
 | UI library | `@neondatabase/auth-ui` 0.2.1-beta – 0.4.0-beta, which bundles `@daveyplate/better-auth-ui` 3.x | `@better-auth-ui/react` + `@better-auth-ui/core` 1.7.30, no Neon UI package |
 | How UI arrives | Prebuilt components from npm | `npx shadcn add @better-auth-ui/...` copies component source into the app |
 | Provider | `NeonAuthUIProvider` (Neon wrapper) | The upstream `AuthProvider`, copied by shadcn, with the Neon client passed straight in. No adapter or type casts. |
@@ -21,7 +21,7 @@ goal is a list of what each example needs to change to move to `@neon/auth` and 
 
 Unchanged: `createNeonAuth()` / `auth.handler()` / `auth.middleware()` on the server,
 `createAuthClient()` on the client, and the env vars (`NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`).
-Moving from `@neondatabase/auth` to `@neon/auth` 0.8.0 only changed imports here; no API changes
+Moving from `@neondatabase/auth` to `@neon/auth` 0.8.0 (and then 0.8.1) only changed imports here; no API changes
 were needed.
 
 ## What the new setup does better
@@ -48,15 +48,17 @@ were needed.
   `@better-auth/api-key`, `react-email`, `zod` 4, `cn` and TanStack Query, even for features you don't
   use.
 - **A large component bundle.** The shadcn items copy about 40–70 files, and the Vite bundle is about 1.2 MB.
-- **Two `@neon/auth` 0.8.0 gaps affect better-auth-ui directly:**
-  1. **Public routes.** `auth.middleware()` hardcodes `DEFAULT_AUTH_SKIP_ROUTES`, which leaves out
-     `/auth/reset-password`, `/auth/verify-email`, `/auth/error`, `/auth/sign-out` and others. This
-     repo works around it in `next/proxy.ts`.
-  2. **Error codes.** The client rewrites Better Auth error codes into Supabase-style ones
-     (`EMAIL_NOT_VERIFIED` → `email_not_confirmed`), so better-auth-ui's verify-email redirect never
-     fires. There's no workaround here; it needs an SDK fix.
+- **Two `@neon/auth` 0.8.0 gaps affected better-auth-ui directly; both are fixed in 0.8.1** ([neondatabase/neon-pkgs#989](https://github.com/neondatabase/neon-pkgs/pull/989)):
+  1. **Public routes (fixed).** `auth.middleware()` hardcoded `DEFAULT_AUTH_SKIP_ROUTES` and left out
+     `/auth/reset-password`, `/auth/verify-email`, `/auth/error`, `/auth/sign-out` and others. The defaults now cover all
+     better-auth-ui 1.7 signed-out views and `auth.middleware({ loginUrl, publicRoutes })` accepts extra public routes, so `next/proxy.ts` no longer needs a workaround.
+  2. **Error codes (fixed).** The client used to rewrite Better Auth error codes into Supabase-style ones
+     (`EMAIL_NOT_VERIFIED` -> `email_not_confirmed`). Thrown errors now carry the raw body as `.error`
+     (`{ code, message, status }`), so better-auth-ui's verify-email redirect fires.
 
 ## What each example needs to change
+
+> Historical: [neondatabase/examples#296](https://github.com/neondatabase/examples/pull/296) has since migrated all five examples, so this checklist is kept for reference only.
 
 The same steps apply to every example:
 
@@ -88,8 +90,7 @@ Changes specific to each example:
 
 ## Suggested follow-ups
 
-- **`@neon/auth`:** keep the raw Better Auth error on thrown errors, complete
-  `DEFAULT_AUTH_SKIP_ROUTES` for better-auth-ui 1.7 views, and let `auth.middleware()` accept extra public routes.
+- **`@neon/auth`:** done in 0.8.1 (raw Better Auth errors, complete default public routes, `publicRoutes` option).
 - **Agent setup.** `neondatabase/examples` has an `AGENTS.md`, but nothing on setting up Neon Auth, and there is
   no `llms.txt`. Add a short "Neon Auth + better-auth-ui" section, or provide a Neon shadcn registry item that writes the
   Neon-specific files (client, provider, API route, pages) in one command.

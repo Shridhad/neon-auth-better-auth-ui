@@ -13,9 +13,10 @@ Two small demo apps showing [Neon Auth](https://neon.com/docs/auth/overview) dri
 - Vite only: the app origin (for example `http://localhost:5173`) added as a trusted origin on the Neon Auth project.
 - Next.js only: `NEON_AUTH_COOKIE_SECRET`, generated with `openssl rand -base64 32`.
 
-## Known gaps in `@neon/auth` 0.8.0
-- Error codes are normalized to Supabase-style codes, so some better-auth-ui error branches never fire. See [vite/README.md](vite/README.md#known-neonauth-080-gaps).
-- The middleware's default public routes omit reset-password, verify-email, error, redirect, sign-out and magic-link-sent, so the Next.js app carries a `proxy.ts` workaround. See [next/README.md](next/README.md#known-neonauth-080-gaps-workarounds-kept-here).
+## Setup notes
+- Both apps use `@neon/auth` 0.8.1. After `shadcn add`, run `npm i better-auth@~1.7.12` (or the pnpm equivalent) so a single better-auth 1.7.x is installed; better-auth's npm `latest` is a 1.8 beta.
+- Next.js: `auth.middleware({ loginUrl, publicRoutes })` takes extra public routes. The defaults cover every signed-out better-auth-ui 1.7 view, so the demo only adds `/`. See [next/README.md](next/README.md).
+- Both apps guard `navigate` against protocol-relative (`//host`) redirect targets (a `@better-auth-ui/core` 1.7.30 open-redirect issue, unfixed upstream); remove the guard once it is fixed.
 
 ## Comparison with neondatabase/examples
 See [COMPARISON.md](COMPARISON.md).

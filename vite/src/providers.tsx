@@ -18,7 +18,10 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider
       authClient={authClient}
-      navigate={({ to, replace }) => navigate(to, { replace })}
+      // getSafeRedirectTo in @better-auth-ui/core 1.7.30 can return protocol-relative paths after URL normalization.
+      navigate={({ to, replace }) =>
+        navigate(to.trim().startsWith('//') ? '/' : to, { replace })
+      }
       Link={Link}
       plugins={[emailOtpPlugin()]}
     >
